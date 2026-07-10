@@ -621,30 +621,115 @@ function renderHomePortfolio() {
   `).join('');
 }
 
-// Render client promise section (replaces fake testimonials for new company)
-function renderTestimonials() {
-  const container = document.getElementById("testimonials-container");
+const COMMITMENT_ITEMS = [
+  {
+    icon: "fa-certificate",
+    tag: "Regulatory Trust",
+    title: "DET Licensed & Compliant",
+    text: "Every service we offer is backed by our official Dubai Department of Economy and Tourism trade license (No. 1632192), issued June 2026."
+  },
+  {
+    icon: "fa-handshake",
+    tag: "Honest Partnership",
+    title: "Transparent Partnerships",
+    text: "Honest pricing, clear contracts, and reliable timelines. We build trust through integrity — from your first inquiry to the final highlight reel."
+  },
+  {
+    icon: "fa-star",
+    tag: "Premium Delivery",
+    title: "Premium Execution Standards",
+    text: "As a newly established Dubai company, we bring fresh creative energy and international expertise to every wedding, concert, and corporate event we manage."
+  }
+];
+
+let commitmentActiveIndex = 0;
+let commitmentTimer = null;
+
+function renderCommitmentShowcase() {
+  const container = document.getElementById("commitment-showcase");
   if (!container) return;
 
+  container.className = "commitment-showcase";
   container.innerHTML = `
-    <div class="promise-grid">
-      <div class="promise-card">
-        <i class="fas fa-certificate"></i>
-        <h4>DET Licensed & Compliant</h4>
-        <p>Every service we offer is backed by our official Dubai Department of Economy and Tourism trade license (No. 1632192), issued June 2026.</p>
+    ${COMMITMENT_ITEMS.map((item, idx) => `
+      <div class="commitment-card ${idx === commitmentActiveIndex ? 'active' : ''}" data-commitment-index="${idx}">
+        <span class="commitment-card-tag">${escapeHtml(item.tag)}</span>
+        <div class="commitment-card-icon"><i class="fas ${item.icon}"></i></div>
+        <h4>${escapeHtml(item.title)}</h4>
+        <p>${escapeHtml(item.text)}</p>
       </div>
-      <div class="promise-card">
-        <i class="fas fa-handshake"></i>
-        <h4>Transparent Partnerships</h4>
-        <p>Honest pricing, clear contracts, and reliable timelines. We build trust through integrity — from your first inquiry to the final highlight reel.</p>
-      </div>
-      <div class="promise-card">
-        <i class="fas fa-star"></i>
-        <h4>Premium Execution Standards</h4>
-        <p>As a newly established Dubai company, we bring fresh creative energy and international expertise to every wedding, concert, and corporate event we manage.</p>
-      </div>
+    `).join('')}
+    <div class="commitment-dots" style="grid-column: 1 / -1;">
+      ${COMMITMENT_ITEMS.map((_, idx) => `
+        <button class="commitment-dot ${idx === commitmentActiveIndex ? 'active' : ''}" data-commitment-index="${idx}" type="button" aria-label="Commitment ${idx + 1}"></button>
+      `).join('')}
     </div>
   `;
+
+  container.querySelectorAll("[data-commitment-index]").forEach(el => {
+    el.addEventListener("click", () => {
+      setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10));
+    });
+    el.addEventListener("mouseenter", () => {
+      if (el.classList.contains("commitment-card")) {
+        stopCommitmentAutoRotate();
+        setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10), false);
+      }
+    });
+  });
+
+  container.addEventListener("mouseleave", startCommitmentAutoRotate);
+
+  if (!container.dataset.observer) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          container.classList.add("commitment-revealed");
+          startCommitmentAutoRotate();
+        } else {
+          stopCommitmentAutoRotate();
+        }
+      });
+    }, { threshold: 0.2 });
+    observer.observe(container);
+    container.dataset.observer = "true";
+  }
+}
+
+function setCommitmentActive(index, restartTimer = true) {
+  commitmentActiveIndex = ((index % COMMITMENT_ITEMS.length) + COMMITMENT_ITEMS.length) % COMMITMENT_ITEMS.length;
+  document.querySelectorAll(".commitment-card").forEach((card, i) => {
+    card.classList.toggle("active", i === commitmentActiveIndex);
+  });
+  document.querySelectorAll(".commitment-dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === commitmentActiveIndex);
+  });
+  if (restartTimer) {
+    stopCommitmentAutoRotate();
+    const showcase = document.getElementById("commitment-showcase");
+    if (showcase && showcase.classList.contains("commitment-revealed")) {
+      startCommitmentAutoRotate();
+    }
+  }
+}
+
+function startCommitmentAutoRotate() {
+  stopCommitmentAutoRotate();
+  commitmentTimer = setInterval(() => {
+    setCommitmentActive((commitmentActiveIndex + 1) % COMMITMENT_ITEMS.length, false);
+  }, 4500);
+}
+
+function stopCommitmentAutoRotate() {
+  if (commitmentTimer) {
+    clearInterval(commitmentTimer);
+    commitmentTimer = null;
+  }
+}
+
+// Legacy alias for load handler
+function renderTestimonials() {
+  renderCommitmentShowcase();
 }
 
 // Render dynamic Services tab layout
@@ -802,6 +887,184 @@ function renderPortfolioPage() {
   });
 }
 
+const MV_SHOWCASE_ITEMS = [
+  {
+    id: "mission",
+    icon: "fa-bullseye",
+    title: "Our Mission",
+    tag: "What We Do",
+    textKey: "mission",
+    highlights: ["World-class event experiences", "Creative design & management", "Licensed hospitality & filming", "Long-term client partnerships"]
+  },
+  {
+    id: "vision",
+    icon: "fa-eye",
+    title: "Our Vision",
+    tag: "Where We're Headed",
+    textKey: "vision",
+    highlights: ["Dubai's most trusted event brand", "Excellence in corporate hosting", "Leading wedding & entertainment", "GCC-wide creative integration"]
+  },
+  {
+    id: "promise",
+    icon: "fa-gem",
+    title: "Our Promise",
+    tag: "Our Commitment",
+    textKey: "promise",
+    highlights: ["Transparent honest pricing", "Full DET regulatory compliance", "Premium execution standards", "Every event treated uniquely"]
+  }
+];
+
+let mvActiveIndex = 0;
+let mvAutoTimer = null;
+let mvProgressTimer = null;
+let mvProgressElapsed = 0;
+const MV_ROTATE_MS = 6000;
+
+function getMvItems() {
+  return MV_SHOWCASE_ITEMS.map(item => ({
+    ...item,
+    text: dbSettings[item.textKey] || ""
+  }));
+}
+
+function renderMissionVisionShowcase() {
+  const container = document.getElementById("mv-showcase");
+  if (!container) return;
+
+  const items = getMvItems();
+
+  container.innerHTML = `
+    <div class="mv-showcase-tabs" id="mv-showcase-tabs">
+      ${items.map((item, idx) => `
+        <button class="mv-tab ${idx === mvActiveIndex ? 'active' : ''}" data-mv-index="${idx}" type="button">
+          <div class="mv-tab-icon"><i class="fas ${item.icon}"></i></div>
+          <div class="mv-tab-label">
+            <h4>${escapeHtml(item.title)}</h4>
+            <span>${escapeHtml(item.tag)}</span>
+          </div>
+        </button>
+      `).join('')}
+    </div>
+    <div class="mv-showcase-panel" id="mv-showcase-panel"></div>
+    <div class="mv-showcase-footer">
+      <button class="mv-nav-btn" id="mv-prev-btn" type="button" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+      <div class="mv-dot-nav" id="mv-dot-nav">
+        ${items.map((_, idx) => `<button class="mv-dot ${idx === mvActiveIndex ? 'active' : ''}" data-mv-index="${idx}" type="button" aria-label="Go to slide ${idx + 1}"></button>`).join('')}
+      </div>
+      <div class="mv-progress-track"><div class="mv-progress-fill" id="mv-progress-fill"></div></div>
+      <button class="mv-nav-btn" id="mv-next-btn" type="button" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  `;
+
+  renderMvPanel(mvActiveIndex);
+
+  container.querySelectorAll(".mv-tab, .mv-dot").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = parseInt(el.getAttribute("data-mv-index"), 10);
+      setMvActive(idx);
+    });
+  });
+
+  document.getElementById("mv-prev-btn").addEventListener("click", () => {
+    setMvActive((mvActiveIndex - 1 + items.length) % items.length);
+  });
+  document.getElementById("mv-next-btn").addEventListener("click", () => {
+    setMvActive((mvActiveIndex + 1) % items.length);
+  });
+
+  if (!container.dataset.mvWired) {
+    container.addEventListener("mouseenter", stopMvAutoRotate);
+    container.addEventListener("mouseleave", startMvAutoRotate);
+    container.dataset.mvWired = "true";
+  }
+
+  if (!container.dataset.observer) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          container.classList.add("mv-revealed");
+          startMvAutoRotate();
+        } else {
+          stopMvAutoRotate();
+        }
+      });
+    }, { threshold: 0.25 });
+    observer.observe(container);
+    container.dataset.observer = "true";
+  }
+}
+
+function renderMvPanel(index) {
+  const panel = document.getElementById("mv-showcase-panel");
+  if (!panel) return;
+  const item = getMvItems()[index];
+  if (!item) return;
+
+  panel.innerHTML = `
+    <div class="mv-panel-slide">
+      <div class="mv-panel-header">
+        <div class="mv-panel-icon-ring"><i class="fas ${item.icon}"></i></div>
+        <div>
+          <h3>${escapeHtml(item.title)}</h3>
+          <span class="mv-panel-tag">${escapeHtml(item.tag)}</span>
+        </div>
+      </div>
+      <p class="mv-panel-text">${escapeHtml(item.text)}</p>
+      <ul class="mv-panel-highlights">
+        ${item.highlights.map(h => `<li><i class="fas fa-check-circle"></i>${escapeHtml(h)}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+function setMvActive(index) {
+  const items = getMvItems();
+  mvActiveIndex = ((index % items.length) + items.length) % items.length;
+  mvProgressElapsed = 0;
+
+  document.querySelectorAll(".mv-tab").forEach((tab, i) => {
+    tab.classList.toggle("active", i === mvActiveIndex);
+  });
+  document.querySelectorAll(".mv-dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === mvActiveIndex);
+  });
+
+  renderMvPanel(mvActiveIndex);
+  resetMvProgress();
+  stopMvAutoRotate();
+  const showcase = document.getElementById("mv-showcase");
+  if (showcase && showcase.classList.contains("mv-revealed")) {
+    startMvAutoRotate();
+  }
+}
+
+function startMvAutoRotate() {
+  stopMvAutoRotate();
+  resetMvProgress();
+  mvAutoTimer = setInterval(() => {
+    const items = getMvItems();
+    setMvActive((mvActiveIndex + 1) % items.length);
+  }, MV_ROTATE_MS);
+
+  mvProgressTimer = setInterval(() => {
+    mvProgressElapsed += 50;
+    const pct = Math.min((mvProgressElapsed / MV_ROTATE_MS) * 100, 100);
+    const fill = document.getElementById("mv-progress-fill");
+    if (fill) fill.style.width = pct + "%";
+  }, 50);
+}
+
+function stopMvAutoRotate() {
+  if (mvAutoTimer) { clearInterval(mvAutoTimer); mvAutoTimer = null; }
+  if (mvProgressTimer) { clearInterval(mvProgressTimer); mvProgressTimer = null; }
+}
+
+function resetMvProgress() {
+  mvProgressElapsed = 0;
+  const fill = document.getElementById("mv-progress-fill");
+  if (fill) fill.style.width = "0%";
+}
+
 // Apply editable site content from CMS settings
 function renderSiteContent() {
   const s = dbSettings;
@@ -824,11 +1087,9 @@ function renderSiteContent() {
   setText("intro-title-text", s.introTitle);
   setText("intro-p1-text", s.introP1);
   setText("intro-p2-text", s.introP2);
-  setText("home-mission-text", s.mission);
-  setText("home-vision-text", s.vision);
-  setText("home-promise-text", s.promise);
   setText("about-mission-text", s.mission);
   setText("about-vision-text", s.vision);
+  renderMissionVisionShowcase();
 
   if (s.stats) {
     setText("stat-events", s.stats.activities);
