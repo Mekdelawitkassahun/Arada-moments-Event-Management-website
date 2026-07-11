@@ -350,6 +350,9 @@ nav a:hover::after, nav li.active a::after {
   font-size: 1.5rem;
   cursor: pointer;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Header scaling — keep all nav text on one line */
@@ -3363,9 +3366,23 @@ footer {
 }
 
 @media (max-width: 768px) {
+  header {
+    overflow: visible;
+  }
+
   header .nav-container {
-    width: 92%;
-    padding: 12px 0;
+    width: 100%;
+    max-width: none;
+    padding: 12px 18px;
+    gap: 12px;
+    position: relative;
+    z-index: 1002;
+  }
+
+  header .logo {
+    margin-right: auto;
+    position: relative;
+    z-index: 1003;
   }
 
   header .logo-img {
@@ -3375,14 +3392,16 @@ footer {
   
   nav {
     position: fixed;
-    top: 75px;
+    top: 100px;
     left: -100%;
     width: 100%;
-    height: calc(100vh - 75px);
+    height: calc(100vh - 100px);
+    height: calc(100dvh - 100px);
     background: var(--bg-darker);
     padding: 40px;
     transition: var(--transition);
     border-top: 1px solid var(--glass-border);
+    z-index: 1001;
   }
   
   nav.open {
@@ -3406,7 +3425,24 @@ footer {
   }
   
   .menu-toggle {
-    display: block;
+    display: flex;
+    margin-left: auto;
+    margin-right: 2px;
+    padding: 10px 14px;
+    min-width: 46px;
+    min-height: 46px;
+    border-radius: 8px;
+    border: 1px solid rgba(240, 171, 95, 0.2);
+    background: rgba(107, 168, 214, 0.12);
+    transition: var(--transition);
+    position: relative;
+    z-index: 1003;
+  }
+
+  .menu-toggle:active {
+    background: rgba(107, 168, 214, 0.28);
+    border-color: var(--accent);
+    color: var(--accent);
   }
   
   .nav-ctas {
