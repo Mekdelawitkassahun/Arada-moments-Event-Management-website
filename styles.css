@@ -211,6 +211,7 @@ header .nav-container {
   margin: 0 auto;
   padding: 14px 0;
   gap: 20px;
+  flex-wrap: nowrap;
 }
 
 /* Logo Design */
@@ -268,11 +269,21 @@ header .logo:hover .logo-img {
 }
 
 /* Nav Links */
+nav {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
 nav ul {
   display: flex;
   list-style: none;
   align-items: center;
   gap: 25px;
+  flex-wrap: nowrap;
+}
+
+nav li {
+  flex-shrink: 0;
 }
 
 nav a {
@@ -285,6 +296,8 @@ nav a {
   transition: var(--transition);
   padding: 5px 0;
   position: relative;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 nav a::after {
@@ -311,6 +324,24 @@ nav a:hover::after, nav li.active a::after {
   display: flex;
   gap: 15px;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.nav-ctas .btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-size: 0.78rem;
+  letter-spacing: 0.6px;
+  line-height: 1.2;
+}
+
+.btn-sm {
+  padding: 10px 18px;
+  font-size: 0.78rem;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .menu-toggle {
@@ -318,6 +349,120 @@ nav a:hover::after, nav li.active a::after {
   color: var(--text-light);
   font-size: 1.5rem;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Header scaling — keep all nav text on one line */
+@media (max-width: 1200px) {
+  header .nav-container {
+    gap: 16px;
+  }
+
+  nav ul {
+    gap: 18px;
+  }
+
+  nav a {
+    font-size: 0.8rem;
+    letter-spacing: 0.8px;
+  }
+
+  header .logo-img {
+    height: 76px;
+    max-width: 220px;
+  }
+
+  .nav-ctas {
+    gap: 10px;
+  }
+
+  .nav-ctas .btn,
+  .btn-sm {
+    padding: 9px 14px;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 1100px) {
+  header .nav-container {
+    gap: 12px;
+  }
+
+  nav ul {
+    gap: 14px;
+  }
+
+  nav a {
+    font-size: 0.74rem;
+    letter-spacing: 0.5px;
+  }
+
+  header .logo-img {
+    height: 68px;
+    max-width: 190px;
+  }
+
+  .nav-ctas .btn,
+  .btn-sm {
+    padding: 8px 12px;
+    font-size: 0.68rem;
+    letter-spacing: 0.4px;
+  }
+}
+
+@media (max-width: 992px) {
+  header .nav-container {
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  nav ul {
+    gap: 10px;
+  }
+
+  nav a {
+    font-size: 0.68rem;
+    letter-spacing: 0.35px;
+  }
+
+  header .logo-img {
+    height: 60px;
+    max-width: 165px;
+  }
+
+  .nav-ctas {
+    gap: 8px;
+  }
+
+  .nav-ctas .btn,
+  .btn-sm {
+    padding: 7px 10px;
+    font-size: 0.62rem;
+    letter-spacing: 0.3px;
+  }
+}
+
+@media (max-width: 860px) {
+  nav ul {
+    gap: 8px;
+  }
+
+  nav a {
+    font-size: 0.62rem;
+    letter-spacing: 0.25px;
+  }
+
+  header .logo-img {
+    height: 54px;
+    max-width: 145px;
+  }
+
+  .nav-ctas .btn,
+  .btn-sm {
+    padding: 6px 9px;
+    font-size: 0.58rem;
+  }
 }
 
 /* SPA Page Toggle system */
@@ -2464,6 +2609,60 @@ footer {
   transform: translateY(0);
 }
 
+/* Mobile: stacked cards — all three visible, no horizontal scroll */
+.mv-showcase--mobile {
+  display: block;
+  grid-template-columns: none;
+}
+
+.mv-mobile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mv-mobile-card {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px 22px;
+  transition: var(--transition);
+}
+
+.mv-mobile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.mv-mobile-card-titles h4 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.mv-mobile-card-titles span {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.mv-mobile-card-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  margin-bottom: 14px;
+}
+
+.mv-mobile-highlights {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
 .mv-showcase-tabs {
   display: flex;
   flex-direction: column;
@@ -2830,6 +3029,29 @@ footer {
   transform: translateY(0);
 }
 
+.commitment-showcase--mobile {
+  gap: 16px;
+}
+
+.commitment-card.mobile-expanded {
+  cursor: pointer;
+}
+
+.commitment-card.mobile-expanded p {
+  max-height: none;
+  opacity: 1;
+  margin-top: 8px;
+}
+
+.commitment-card.mobile-expanded .commitment-card-tag {
+  opacity: 0.65;
+}
+
+.commitment-card.mobile-expanded.touch-active,
+.commitment-card.mobile-expanded.touch-active .commitment-card-tag {
+  opacity: 1;
+}
+
 .commitment-card {
   background: var(--card-bg);
   border: 1px solid var(--glass-border);
@@ -2855,7 +3077,8 @@ footer {
 }
 
 .commitment-card:hover,
-.commitment-card.active {
+.commitment-card.active,
+.commitment-card.touch-active {
   border-color: var(--accent);
   box-shadow: var(--shadow-neon);
   transform: translateY(-8px);
@@ -2863,7 +3086,8 @@ footer {
 }
 
 .commitment-card.active::before,
-.commitment-card:hover::before {
+.commitment-card:hover::before,
+.commitment-card.touch-active::before {
   opacity: 1;
 }
 
@@ -2881,7 +3105,8 @@ footer {
 }
 
 .commitment-card.active .commitment-card-icon,
-.commitment-card:hover .commitment-card-icon {
+.commitment-card:hover .commitment-card-icon,
+.commitment-card.touch-active .commitment-card-icon {
   background: var(--accent);
   border-color: var(--accent);
   box-shadow: var(--shadow-neon);
@@ -2895,7 +3120,8 @@ footer {
 }
 
 .commitment-card.active .commitment-card-icon i,
-.commitment-card:hover .commitment-card-icon i {
+.commitment-card:hover .commitment-card-icon i,
+.commitment-card.touch-active .commitment-card-icon i {
   color: var(--primary);
 }
 
@@ -2908,7 +3134,8 @@ footer {
 }
 
 .commitment-card.active h4,
-.commitment-card:hover h4 {
+.commitment-card:hover h4,
+.commitment-card.touch-active h4 {
   color: var(--accent);
 }
 
@@ -2942,7 +3169,8 @@ footer {
 }
 
 .commitment-card.active .commitment-card-tag,
-.commitment-card:hover .commitment-card-tag {
+.commitment-card:hover .commitment-card-tag,
+.commitment-card.touch-active .commitment-card-tag {
   opacity: 1;
 }
 
@@ -3050,13 +3278,14 @@ footer {
     gap: 25px;
   }
   .mv-showcase-tabs {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    gap: 10px;
+    flex-direction: column;
+    overflow-x: visible;
+    padding-bottom: 0;
+    gap: 12px;
   }
   .mv-tab {
-    min-width: 200px;
+    min-width: 0;
+    width: 100%;
     padding: 16px 18px;
   }
   .mv-showcase-panel {
@@ -3168,6 +3397,12 @@ footer {
   
   nav a {
     font-size: 1.1rem;
+    white-space: nowrap;
+  }
+
+  .nav-ctas .btn,
+  .btn-sm {
+    white-space: nowrap;
   }
   
   .menu-toggle {
@@ -3255,5 +3490,131 @@ footer {
   
   .gallery-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile touch-friendly: tap feedback mirrors desktop hover */
+@media (max-width: 768px) {
+  .mobile-reveal-pending {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+
+  .mv-showcase.mv-revealed .mv-mobile-card.mobile-reveal-pending,
+  .mobile-reveal-pending.mobile-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .mv-mobile-card {
+    transition: var(--transition);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mv-mobile-card.touch-active {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+    transform: translateY(-6px);
+    background: rgba(107, 168, 214, 0.28);
+  }
+
+  .mv-mobile-card.touch-active .mv-tab-icon {
+    animation: mvIconPulse 2s ease-in-out infinite;
+    box-shadow: var(--shadow-neon);
+  }
+
+  .service-card,
+  .portfolio-item,
+  .gallery-item,
+  .blog-card,
+  .stat-item,
+  .value-card,
+  .license-activity-card,
+  .mv-card,
+  .commitment-card {
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  .service-card.touch-active {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+  }
+
+  .service-card.touch-active .service-card-img img {
+    transform: scale(1.1);
+  }
+
+  .service-card.touch-active .service-card-content h3 {
+    color: var(--accent);
+  }
+
+  .service-card.touch-active .service-card-link i {
+    transform: translateX(5px);
+  }
+
+  .portfolio-item.touch-active img {
+    transform: scale(1.08);
+  }
+
+  .portfolio-item.touch-active .portfolio-overlay {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(107, 168, 214, 0.95) 0%, rgba(107, 168, 214, 0.55) 60%, transparent 100%);
+  }
+
+  .gallery-item.touch-active {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+    transform: translateY(-4px);
+  }
+
+  .gallery-item.touch-active img {
+    transform: scale(1.06);
+  }
+
+  .gallery-item.touch-active .gallery-item-caption,
+  .gallery-item.touch-active .gallery-item-hover {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .blog-card.touch-active {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+  }
+
+  .blog-card.touch-active .blog-card-img img {
+    transform: scale(1.08);
+  }
+
+  .blog-card.touch-active .blog-card-content h3 {
+    color: var(--accent);
+  }
+
+  .stat-item.touch-active {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+  }
+
+  .value-card.touch-active,
+  .license-activity-card.touch-active,
+  .mv-card.touch-active {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-neon);
+  }
+
+  .mv-panel-slide {
+    animation: mvHighlightIn 0.55s ease both;
+  }
+
+  @keyframes mvSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

@@ -555,6 +555,8 @@ function handleNavigation() {
   } else if (pageName === "admin") {
     checkAdminAuth();
   }
+
+  scheduleMobileEnhancements();
 }
 
 // Window event listeners for hash changes
@@ -565,6 +567,24 @@ window.addEventListener("load", () => {
   renderFeaturedServices();
   renderHomePortfolio();
   renderTestimonials();
+  lastMobileBreakpoint = isMobileView();
+  initMobileTouchCards();
+  scheduleMobileEnhancements();
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const nowMobile = isMobileView();
+    if (nowMobile !== lastMobileBreakpoint) {
+      lastMobileBreakpoint = nowMobile;
+      if (!nowMobile) clearMobileTouchActive(null);
+      renderMissionVisionShowcase();
+      renderCommitmentShowcase();
+    }
+    scheduleMobileEnhancements();
+  }, 200);
 });
 window.addEventListener("scroll", () => {
   const header = document.getElementById("site-header");
@@ -584,6 +604,91 @@ document.getElementById("menu-toggle-btn").addEventListener("click", () => {
 // 3. PAGE RENDERERS (HOME & MAIN SECTIONS)
 // ==========================================
 
+const MOBILE_BREAKPOINT = "(max-width: 768px)";
+
+function isMobileView() {
+  return window.matchMedia(MOBILE_BREAKPOINT).matches;
+}
+
+let mobileRevealObserver = null;
+let lastMobileBreakpoint = null;
+
+function initMobileRevealAnimations() {
+  if (!isMobileView()) return;
+
+  if (!mobileRevealObserver) {
+    mobileRevealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("mobile-revealed");
+          mobileRevealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -4% 0px" });
+  }
+
+  const targets = document.querySelectorAll(
+    ".service-card, .portfolio-item, .gallery-item, .blog-card, .stat-item, .value-card, .license-activity-card, .mv-card, .mv-mobile-card"
+  );
+
+  targets.forEach(el => {
+    if (!el.classList.contains("mobile-revealed")) {
+      el.classList.add("mobile-reveal-pending");
+      mobileRevealObserver.observe(el);
+    }
+  });
+}
+
+function scheduleMobileEnhancements() {
+  requestAnimationFrame(() => {
+    initMobileRevealAnimations();
+    initMobileTouchCards();
+  });
+}
+
+const MOBILE_TOUCH_CARD_SELECTOR = [
+  ".service-card",
+  ".portfolio-item",
+  ".gallery-item",
+  ".blog-card",
+  ".stat-item",
+  ".value-card",
+  ".license-activity-card",
+  ".mv-card",
+  ".mv-mobile-card",
+  ".commitment-card"
+].join(", ");
+
+function clearMobileTouchActive(except) {
+  document.querySelectorAll(`${MOBILE_TOUCH_CARD_SELECTOR}.touch-active`).forEach(el => {
+    if (el !== except) el.classList.remove("touch-active");
+  });
+}
+
+function initMobileTouchCards() {
+  if (window.__mobileTouchCardsWired) return;
+  window.__mobileTouchCardsWired = true;
+
+  document.addEventListener("touchstart", (e) => {
+    if (!isMobileView()) return;
+    const card = e.target.closest(MOBILE_TOUCH_CARD_SELECTOR);
+    if (!card) {
+      clearMobileTouchActive(null);
+      return;
+    }
+    clearMobileTouchActive(card);
+    card.classList.add("touch-active");
+  }, { passive: true });
+
+  document.addEventListener("click", (e) => {
+    if (!isMobileView()) return;
+    const card = e.target.closest(MOBILE_TOUCH_CARD_SELECTOR);
+    if (!card) return;
+    clearMobileTouchActive(card);
+    card.classList.add("touch-active");
+  }, true);
+}
+
 // Render featured services inside homepage slider
 function renderFeaturedServices() {
   const container = document.getElementById("featured-services-container");
@@ -602,6 +707,7 @@ function renderFeaturedServices() {
       </div>
     </div>
   `).join('');
+  scheduleMobileEnhancements();
 }
 
 // Render portfolio previews on homepage
@@ -619,6 +725,7 @@ function renderHomePortfolio() {
       </div>
     </div>
   `).join('');
+  scheduleMobileEnhancements();
 }
 
 const COMMITMENT_ITEMS = [
@@ -649,43 +756,49 @@ function renderCommitmentShowcase() {
   const container = document.getElementById("commitment-showcase");
   if (!container) return;
 
-  container.className = "commitment-showcase";
+  const mobile = isMobileView();
+  stopCommitmentAutoRotate();
+
+  container.className = mobile ? "commitment-showcase commitment-showcase--mobile" : "commitment-showcase";
   container.innerHTML = `
     ${COMMITMENT_ITEMS.map((item, idx) => `
-      <div class="commitment-card ${idx === commitmentActiveIndex ? 'active' : ''}" data-commitment-index="${idx}">
+      <div class="commitment-card ${mobile ? 'mobile-expanded' : (idx === commitmentActiveIndex ? 'active' : '')}" data-commitment-index="${idx}" style="${mobile ? `transition-delay: ${idx * 0.1}s` : ''}">
         <span class="commitment-card-tag">${escapeHtml(item.tag)}</span>
         <div class="commitment-card-icon"><i class="fas ${item.icon}"></i></div>
         <h4>${escapeHtml(item.title)}</h4>
         <p>${escapeHtml(item.text)}</p>
       </div>
     `).join('')}
+    ${mobile ? '' : `
     <div class="commitment-dots" style="grid-column: 1 / -1;">
       ${COMMITMENT_ITEMS.map((_, idx) => `
         <button class="commitment-dot ${idx === commitmentActiveIndex ? 'active' : ''}" data-commitment-index="${idx}" type="button" aria-label="Commitment ${idx + 1}"></button>
       `).join('')}
-    </div>
+    </div>`}
   `;
 
-  container.querySelectorAll("[data-commitment-index]").forEach(el => {
-    el.addEventListener("click", () => {
-      setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10));
+  if (!mobile) {
+    container.querySelectorAll("[data-commitment-index]").forEach(el => {
+      el.addEventListener("click", () => {
+        setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10));
+      });
+      el.addEventListener("mouseenter", () => {
+        if (el.classList.contains("commitment-card")) {
+          stopCommitmentAutoRotate();
+          setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10), false);
+        }
+      });
     });
-    el.addEventListener("mouseenter", () => {
-      if (el.classList.contains("commitment-card")) {
-        stopCommitmentAutoRotate();
-        setCommitmentActive(parseInt(el.getAttribute("data-commitment-index"), 10), false);
-      }
-    });
-  });
 
-  container.addEventListener("mouseleave", startCommitmentAutoRotate);
+    container.addEventListener("mouseleave", startCommitmentAutoRotate);
+  }
 
   if (!container.dataset.observer) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           container.classList.add("commitment-revealed");
-          startCommitmentAutoRotate();
+          if (!isMobileView()) startCommitmentAutoRotate();
         } else {
           stopCommitmentAutoRotate();
         }
@@ -694,6 +807,8 @@ function renderCommitmentShowcase() {
     observer.observe(container);
     container.dataset.observer = "true";
   }
+
+  scheduleMobileEnhancements();
 }
 
 function setCommitmentActive(index, restartTimer = true) {
@@ -714,6 +829,7 @@ function setCommitmentActive(index, restartTimer = true) {
 }
 
 function startCommitmentAutoRotate() {
+  if (isMobileView()) return;
   stopCommitmentAutoRotate();
   commitmentTimer = setInterval(() => {
     setCommitmentActive((commitmentActiveIndex + 1) % COMMITMENT_ITEMS.length, false);
@@ -872,6 +988,7 @@ function renderPortfolioPage() {
         </div>
       </div>
     `).join('');
+    scheduleMobileEnhancements();
   }
 
   buildGrid();
@@ -927,12 +1044,61 @@ function getMvItems() {
   }));
 }
 
+function setupMvRevealObserver(container) {
+  if (container.dataset.observer) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        container.classList.add("mv-revealed");
+        if (!isMobileView()) startMvAutoRotate();
+      } else {
+        stopMvAutoRotate();
+      }
+    });
+  }, { threshold: 0.2 });
+  observer.observe(container);
+  container.dataset.observer = "true";
+}
+
+function renderMvMobileStack(container, items) {
+  stopMvAutoRotate();
+  container.className = "mv-showcase mv-showcase--mobile";
+  container.innerHTML = `
+    <div class="mv-mobile-stack">
+      ${items.map((item, idx) => `
+        <article class="mv-mobile-card mobile-reveal-pending" style="transition-delay: ${idx * 0.12}s">
+          <div class="mv-mobile-card-header">
+            <div class="mv-tab-icon"><i class="fas ${item.icon}"></i></div>
+            <div class="mv-mobile-card-titles">
+              <h4>${escapeHtml(item.title)}</h4>
+              <span>${escapeHtml(item.tag)}</span>
+            </div>
+          </div>
+          <p class="mv-mobile-card-text">${escapeHtml(item.text)}</p>
+          <ul class="mv-panel-highlights mv-mobile-highlights">
+            ${item.highlights.map(h => `<li><i class="fas fa-check-circle"></i>${escapeHtml(h)}</li>`).join('')}
+          </ul>
+        </article>
+      `).join('')}
+    </div>
+  `;
+  setupMvRevealObserver(container);
+  scheduleMobileEnhancements();
+}
+
 function renderMissionVisionShowcase() {
   const container = document.getElementById("mv-showcase");
   if (!container) return;
 
   const items = getMvItems();
 
+  if (isMobileView()) {
+    renderMvMobileStack(container, items);
+    return;
+  }
+
+  stopMvAutoRotate();
+  container.className = "mv-showcase";
   container.innerHTML = `
     <div class="mv-showcase-tabs" id="mv-showcase-tabs">
       ${items.map((item, idx) => `
@@ -978,20 +1144,7 @@ function renderMissionVisionShowcase() {
     container.dataset.mvWired = "true";
   }
 
-  if (!container.dataset.observer) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          container.classList.add("mv-revealed");
-          startMvAutoRotate();
-        } else {
-          stopMvAutoRotate();
-        }
-      });
-    }, { threshold: 0.25 });
-    observer.observe(container);
-    container.dataset.observer = "true";
-  }
+  setupMvRevealObserver(container);
 }
 
 function renderMvPanel(index) {
@@ -1039,6 +1192,7 @@ function setMvActive(index) {
 }
 
 function startMvAutoRotate() {
+  if (isMobileView()) return;
   stopMvAutoRotate();
   resetMvProgress();
   mvAutoTimer = setInterval(() => {
@@ -1131,6 +1285,7 @@ function renderGalleryPage() {
         </div>
       </div>
     `).join('');
+    scheduleMobileEnhancements();
   }
 
   if (filterBar && !filterBar.dataset.wired) {
@@ -1184,6 +1339,7 @@ function renderBlogPage() {
         </div>
       </div>
     `).join('');
+    scheduleMobileEnhancements();
   }
 
   buildGrid();
