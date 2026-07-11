@@ -2,6 +2,7 @@
 
 :root {
   --primary: #6BA8D6;
+  --header-height: 80px;
   --primary-rgb: 107, 168, 214;
   --primary-light: #8EC4E8;
   --primary-soft: #A8D4F0;
@@ -474,7 +475,7 @@ nav a:hover::after, nav li.active a::after {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
-  padding-top: 80px;
+  padding-top: var(--header-height);
 }
 
 .page-view.active-page {
@@ -3366,6 +3367,10 @@ footer {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --header-height: 104px;
+  }
+
   header {
     overflow: visible;
   }
@@ -3392,11 +3397,11 @@ footer {
   
   nav {
     position: fixed;
-    top: 100px;
+    top: var(--header-height);
     left: -100%;
     width: 100%;
-    height: calc(100vh - 100px);
-    height: calc(100dvh - 100px);
+    height: calc(100vh - var(--header-height));
+    height: calc(100dvh - var(--header-height));
     background: var(--bg-darker);
     padding: 40px;
     transition: var(--transition);
@@ -3447,6 +3452,27 @@ footer {
   
   .nav-ctas {
     display: none;
+  }
+
+  .hero {
+    height: auto;
+    min-height: calc(100dvh - var(--header-height));
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 28px;
+    padding-bottom: 48px;
+  }
+
+  .hero-content {
+    padding-top: 12px;
+    width: 100%;
+  }
+
+  .new-company-badge {
+    font-size: 0.72rem;
+    padding: 7px 14px;
+    letter-spacing: 0.6px;
+    margin-bottom: 16px;
   }
   
   .hero-btns {
@@ -3520,6 +3546,51 @@ footer {
 }
 
 @media (max-width: 480px) {
+  :root {
+    --header-height: 92px;
+  }
+
+  header .nav-container {
+    padding: 10px 16px;
+  }
+
+  header .logo-img {
+    height: 56px;
+    max-width: 165px;
+  }
+
+  .menu-toggle {
+    min-width: 42px;
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 1.35rem;
+  }
+
+  .hero {
+    padding-top: 20px;
+    padding-bottom: 36px;
+  }
+
+  .hero-content {
+    padding-top: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .new-company-badge {
+    font-size: 0.65rem;
+    padding: 6px 12px;
+    gap: 6px;
+    letter-spacing: 0.4px;
+    margin-bottom: 14px;
+  }
+
+  .hero-badge {
+    font-size: 0.68rem;
+    padding: 5px 12px;
+    letter-spacing: 1px;
+  }
+
   .values-grid {
     grid-template-columns: 1fr;
   }
